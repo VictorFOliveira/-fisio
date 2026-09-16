@@ -23,6 +23,10 @@ dependencies:
   local_auth: ^2.3.0
   flutter_secure_storage: ^9.2.4
   crypto: ^3.0.6
+  google_sign_in: ^6.2.2
+  googleapis: ^13.2.0
+  extension_google_sign_in_as_googleapis_auth: ^2.0.12
+  cryptography: ^2.7.0
 
 dev_dependencies:
   flutter_test:
