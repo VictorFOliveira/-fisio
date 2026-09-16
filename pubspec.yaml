@@ -27,6 +27,8 @@ dependencies:
   googleapis: ^13.2.0
   extension_google_sign_in_as_googleapis_auth: ^2.0.12
   cryptography: ^2.7.0
+  in_app_purchase: ^3.2.1
+  google_mobile_ads: ^5.3.1
 
 dev_dependencies:
   flutter_test:
