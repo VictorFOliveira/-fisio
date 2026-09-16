@@ -12,7 +12,10 @@ O projeto já possui fluxo local de pacientes e prontuário clínico, com persis
 - Dados físicos: peso e altura; a ficha calcula e exibe IMC quando os dois valores estão disponíveis.
 - Informações clínicas: diagnóstico médico informado, queixa principal, comorbidades, medicamentos, alergias, cirurgias/histórico relevante, restrições/precauções, profissional que encaminhou e observações gerais.
 - Modal de cadastro rolável e com espaçamento consistente para telas menores.
-- Após salvar, o app confirma o cadastro e abre automaticamente a ficha do novo paciente.
+- Após salvar, o paciente é persistido e recuperado pelo ID gerado no banco, evitando abrir uma ficha diferente da recém-criada.
+- O app exibe uma confirmação explícita de **Paciente cadastrado com sucesso** e oferece a ação **Abrir ficha**.
+- Ao confirmar, abre a ficha exata do paciente recém-cadastrado; ao retornar, a listagem é recarregada.
+- Falhas de persistência ou recuperação do cadastro são informadas ao usuário em vez de encerrarem o fluxo silenciosamente.
 - Ficha completa do paciente, reunindo identificação, dados físicos, informações clínicas e quantidade de registros.
 - Edição posterior de todos os dados cadastrais e clínicos do paciente, com confirmação visual após salvar.
 - Exclusão permanente do paciente com diálogo de confirmação. A exclusão também remove os registros clínicos vinculados.
@@ -43,7 +46,7 @@ Antes de uso em produção com dados reais de saúde, ainda devem ser revisados 
 
 ## Fluxo do paciente
 
-`Pacientes → Novo paciente → Salvar → Confirmação → Ficha do paciente`
+`Pacientes → Novo paciente → Salvar → Persistir/recuperar pelo ID → Confirmação → Abrir ficha → Ficha do paciente recém-criado`
 
 A partir da ficha é possível consultar os dados cadastrais/clínicos, editar informações, registrar novas avaliações e acompanhar a linha do tempo e a evolução.
 
@@ -55,7 +58,11 @@ A migração para a versão 3 adicionou ao paciente os campos de sexo, peso, alt
 
 ## CI / Android
 
-O repositório possui GitHub Actions para instalar dependências, analisar/testar o projeto e compilar o APK Android de debug. O APK gerado pelo workflow é disponibilizado como artifact da execução.
+O repositório possui GitHub Actions para instalar dependências, executar `flutter analyze`, executar `flutter test`, compilar o APK Android de debug e publicar o APK como artifact da execução.
+
+A correção do fluxo pós-cadastro foi validada no Flutter CI #124 e, após o merge na `main`, o Flutter CI #125 também concluiu com sucesso, incluindo análise, testes, build Android e upload do APK.
+
+Cada atualização de código/documentação deve ser commitada no GitHub para manter a `main` como referência do estado atual do aplicativo.
 
 ## Desenvolvimento
 
