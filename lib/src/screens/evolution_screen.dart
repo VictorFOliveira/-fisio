@@ -17,7 +17,7 @@ class _EvolutionScreenState extends State<EvolutionScreen> {
     final list=widget.records.where((r)=>r.type==type&&double.tryParse(r.value.replaceAll(',','.'))!=null).toList();
     list.sort((a,b)=>a.recordedAt.compareTo(b.recordedAt)); return list;
   }
-  String label(RecordType t)=>switch(t){RecordType.goniometry=>'ADM',RecordType.strength=>'Força',RecordType.assessment=>'Avaliação',RecordType.evolution=>'Evolução',RecordType.functionalTest=>'Testes'};
+  String label(RecordType t)=>switch(t){RecordType.goniometry=>'Goniometria',RecordType.strength=>'Força',RecordType.assessment=>'Avaliação',RecordType.evolution=>'Evolução',RecordType.functionalTest=>'Testes'};
   @override Widget build(BuildContext context){final data=numericRecords;final spots=<FlSpot>[];for(var i=0;i<data.length;i++){spots.add(FlSpot(i.toDouble(),double.parse(data[i].value.replaceAll(',','.'))));}
     return Scaffold(appBar:AppBar(title:const Text('Evolução clínica')),body:ListView(padding:const EdgeInsets.all(16),children:[
       Text(widget.patient.name,style:Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight:FontWeight.bold)),const Text('Acompanhe medidas registradas ao longo das sessões.'),const SizedBox(height:18),
