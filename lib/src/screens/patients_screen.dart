@@ -29,41 +29,34 @@ class _PatientsScreenState extends State<PatientsScreen> {
     DateTime? birthDate; String? sex;
     final patient=await showDialog<Patient>(context:context,builder:(dialogContext)=>StatefulBuilder(builder:(context,setDialogState)=>AlertDialog(
       insetPadding:const EdgeInsets.symmetric(horizontal:20,vertical:24),
-      titlePadding:const EdgeInsets.fromLTRB(24,22,24,8),
-      contentPadding:const EdgeInsets.fromLTRB(24,8,24,8),
-      actionsPadding:const EdgeInsets.fromLTRB(16,8,16,16),
+      titlePadding:const EdgeInsets.fromLTRB(24,22,24,8),contentPadding:const EdgeInsets.fromLTRB(24,8,24,8),actionsPadding:const EdgeInsets.fromLTRB(16,8,16,16),
       title:const Row(children:[Icon(Icons.person_add_alt_1),SizedBox(width:10),Text('Novo paciente')]),
       content:SizedBox(width:520,child:SingleChildScrollView(child:Column(crossAxisAlignment:CrossAxisAlignment.start,mainAxisSize:MainAxisSize.min,children:[
         Text('Identificação',style:Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight:FontWeight.w800)),const SizedBox(height:12),
         TextField(controller:name,textCapitalization:TextCapitalization.words,decoration:const InputDecoration(labelText:'Nome completo *')),const SizedBox(height:14),
         InkWell(onTap:()async{final picked=await showDatePicker(context:context,firstDate:DateTime(1900),lastDate:DateTime.now(),initialDate:birthDate??DateTime(1990));if(picked!=null)setDialogState(()=>birthDate=picked);},child:InputDecorator(decoration:const InputDecoration(labelText:'Data de nascimento'),child:Padding(padding:const EdgeInsets.only(top:2),child:Text(birthDate==null?'Selecionar':'${birthDate!.day.toString().padLeft(2,'0')}/${birthDate!.month.toString().padLeft(2,'0')}/${birthDate!.year}')))),const SizedBox(height:14),
         DropdownButtonFormField<String>(initialValue:sex,decoration:const InputDecoration(labelText:'Sexo'),items:const ['Feminino','Masculino','Outro','Prefere não informar'].map((v)=>DropdownMenuItem(value:v,child:Text(v))).toList(),onChanged:(v)=>setDialogState(()=>sex=v)),const SizedBox(height:14),
-        TextField(controller:phone,keyboardType:TextInputType.phone,decoration:const InputDecoration(labelText:'Telefone')),const SizedBox(height:14),
-        TextField(controller:email,keyboardType:TextInputType.emailAddress,decoration:const InputDecoration(labelText:'E-mail')),const SizedBox(height:24),
+        TextField(controller:phone,keyboardType:TextInputType.phone,decoration:const InputDecoration(labelText:'Telefone')),const SizedBox(height:14),TextField(controller:email,keyboardType:TextInputType.emailAddress,decoration:const InputDecoration(labelText:'E-mail')),const SizedBox(height:24),
         Text('Dados físicos',style:Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight:FontWeight.w800)),const SizedBox(height:12),
         Row(children:[Expanded(child:TextField(controller:weight,keyboardType:const TextInputType.numberWithOptions(decimal:true),inputFormatters:[FilteringTextInputFormatter.allow(RegExp(r'[0-9,.]'))],decoration:const InputDecoration(labelText:'Peso (kg)'))),const SizedBox(width:12),Expanded(child:TextField(controller:height,keyboardType:const TextInputType.numberWithOptions(decimal:true),inputFormatters:[FilteringTextInputFormatter.allow(RegExp(r'[0-9,.]'))],decoration:const InputDecoration(labelText:'Altura (cm)',hintText:'175')))]),const SizedBox(height:24),
         Text('Informações clínicas',style:Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight:FontWeight.w800)),const SizedBox(height:12),
-        TextField(controller:diagnosis,maxLines:2,decoration:const InputDecoration(labelText:'Diagnóstico médico informado',hintText:'Diagnóstico/hipótese do encaminhamento')),const SizedBox(height:14),
-        TextField(controller:complaint,maxLines:2,decoration:const InputDecoration(labelText:'Queixa principal')),const SizedBox(height:14),
-        TextField(controller:comorbidities,maxLines:2,decoration:const InputDecoration(labelText:'Comorbidades')),const SizedBox(height:14),
-        TextField(controller:medications,maxLines:2,decoration:const InputDecoration(labelText:'Medicamentos em uso')),const SizedBox(height:14),
-        TextField(controller:allergies,maxLines:2,decoration:const InputDecoration(labelText:'Alergias')),const SizedBox(height:14),
-        TextField(controller:surgeries,maxLines:2,decoration:const InputDecoration(labelText:'Cirurgias / histórico relevante')),const SizedBox(height:14),
-        TextField(controller:precautions,maxLines:2,decoration:const InputDecoration(labelText:'Restrições e precauções')),const SizedBox(height:14),
-        TextField(controller:referring,decoration:const InputDecoration(labelText:'Profissional que encaminhou')),const SizedBox(height:14),
-        TextField(controller:notes,maxLines:4,decoration:const InputDecoration(labelText:'Observações gerais')),const SizedBox(height:12),
-        Text('Os dados são registrados para avaliação do profissional; o +Fisio não determina diagnóstico ou tratamento.',style:Theme.of(context).textTheme.bodySmall),
-      ]))),
-      actions:[TextButton(onPressed:()=>Navigator.pop(dialogContext),child:const Text('Cancelar')),FilledButton(onPressed:(){if(name.text.trim().isEmpty){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Informe o nome do paciente.')));return;}Navigator.pop(dialogContext,Patient(name:name.text.trim(),birthDate:birthDate,phone:_text(phone),email:_text(email),sex:sex,weightKg:_number(weight),heightCm:_number(height),medicalDiagnosis:_text(diagnosis),chiefComplaint:_text(complaint),comorbidities:_text(comorbidities),medications:_text(medications),allergies:_text(allergies),surgeries:_text(surgeries),precautions:_text(precautions),referringProfessional:_text(referring),notes:_text(notes),createdAt:DateTime.now()));},child:const Text('Salvar paciente'))],
+        TextField(controller:diagnosis,maxLines:2,decoration:const InputDecoration(labelText:'Diagnóstico médico informado')),const SizedBox(height:14),TextField(controller:complaint,maxLines:2,decoration:const InputDecoration(labelText:'Queixa principal')),const SizedBox(height:14),TextField(controller:comorbidities,maxLines:2,decoration:const InputDecoration(labelText:'Comorbidades')),const SizedBox(height:14),TextField(controller:medications,maxLines:2,decoration:const InputDecoration(labelText:'Medicamentos em uso')),const SizedBox(height:14),TextField(controller:allergies,maxLines:2,decoration:const InputDecoration(labelText:'Alergias')),const SizedBox(height:14),TextField(controller:surgeries,maxLines:2,decoration:const InputDecoration(labelText:'Cirurgias / histórico relevante')),const SizedBox(height:14),TextField(controller:precautions,maxLines:2,decoration:const InputDecoration(labelText:'Restrições e precauções')),const SizedBox(height:14),TextField(controller:referring,decoration:const InputDecoration(labelText:'Profissional que encaminhou')),const SizedBox(height:14),TextField(controller:notes,maxLines:4,decoration:const InputDecoration(labelText:'Observações gerais')),
+      ]))),actions:[TextButton(onPressed:()=>Navigator.pop(dialogContext),child:const Text('Cancelar')),FilledButton(onPressed:(){if(name.text.trim().isEmpty){ScaffoldMessenger.of(dialogContext).showSnackBar(const SnackBar(content:Text('Informe o nome do paciente.')));return;}Navigator.pop(dialogContext,Patient(name:name.text.trim(),birthDate:birthDate,phone:_text(phone),email:_text(email),sex:sex,weightKg:_number(weight),heightCm:_number(height),medicalDiagnosis:_text(diagnosis),chiefComplaint:_text(complaint),comorbidities:_text(comorbidities),medications:_text(medications),allergies:_text(allergies),surgeries:_text(surgeries),precautions:_text(precautions),referringProfessional:_text(referring),notes:_text(notes),createdAt:DateTime.now()));},child:const Text('Salvar paciente'))],
     )));
     if(patient==null)return;
-    final id=await widget.database.addPatient(patient);
-    final saved=await widget.database.patientById(id);
-    if(!mounted||saved==null)return;
-    setState(_reload);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('${saved.name} cadastrado com sucesso.')));
-    await Navigator.of(context).push(MaterialPageRoute(builder:(_)=>PatientDetailScreen(database:widget.database,patient:saved,initialRecordType:widget.initialRecordType)));
-    if(mounted)setState(_reload);
+    try {
+      final id=await widget.database.addPatient(patient);
+      final saved=await widget.database.patientById(id);
+      if(!mounted)return;
+      if(saved==null){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text('Não foi possível recuperar o paciente cadastrado. Tente novamente.')));setState(_reload);return;}
+      setState(_reload);
+      final open=await showDialog<bool>(context:context,barrierDismissible:false,builder:(dialogContext)=>AlertDialog(icon:const Icon(Icons.check_circle_outline,size:48),title:const Text('Paciente cadastrado com sucesso'),content:Text('${saved.name} foi salvo. A ficha do paciente será aberta agora.'),actions:[FilledButton(onPressed:()=>Navigator.pop(dialogContext,true),child:const Text('Abrir ficha'))]));
+      if(!mounted)return;
+      if(open==true){await Navigator.of(context).push(MaterialPageRoute(builder:(_)=>PatientDetailScreen(database:widget.database,patient:saved,initialRecordType:widget.initialRecordType)));}
+      if(mounted)setState(_reload);
+    } catch (e) {
+      if(mounted)ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('Não foi possível cadastrar o paciente: $e')));
+    }
   }
 
   Future<void> _deletePatient(Patient p)async{if(p.id==null)return;final confirmed=await showDialog<bool>(context:context,builder:(context)=>AlertDialog(title:const Text('Excluir paciente permanentemente?'),content:Text('Excluir ${p.name} também apagará todas as avaliações, evoluções, medições e testes vinculados. Esta ação não pode ser desfeita.'),actions:[TextButton(onPressed:()=>Navigator.pop(context,false),child:const Text('Cancelar')),FilledButton(style:FilledButton.styleFrom(backgroundColor:Theme.of(context).colorScheme.error),onPressed:()=>Navigator.pop(context,true),child:const Text('Excluir permanentemente'))]));if(confirmed==true){await widget.database.deletePatient(p.id!);if(mounted){setState(_reload);ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text('${p.name} foi excluído.')));}}}
