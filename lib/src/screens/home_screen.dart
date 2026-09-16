@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import '../data/app_database.dart';
 import '../models/clinical_record.dart';
+import '../models/professional_profile.dart';
 import '../services/pro_service.dart';
 import 'patients_screen.dart';
 import 'pro_screen.dart';
+import 'professional_profile_screen.dart';
 import 'security_backup_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key, required this.database});
+  const HomeScreen({super.key, required this.database, required this.professional, required this.onProfessionalChanged});
   final AppDatabase database;
+  final ProfessionalProfile professional;
+  final ValueChanged<ProfessionalProfile> onProfessionalChanged;
   @override State<HomeScreen> createState()=>_HomeScreenState();
 }
 class _HomeScreenState extends State<HomeScreen>{
@@ -19,11 +23,14 @@ class _HomeScreenState extends State<HomeScreen>{
   Future<void> _refresh()async{final count=await widget.database.patientCount();if(mounted)setState(()=>_patients=count);}
   Future<void> _openPatients([RecordType? initialType,bool newPatient=false])async{await Navigator.of(context).push(MaterialPageRoute(builder:(_)=>PatientsScreen(database:widget.database,initialRecordType:initialType,openNewPatient:newPatient)));await _refresh();}
   void _openPro()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const ProScreen()));
+  Future<void> _editProfessional() async {final updated=await Navigator.of(context).push<ProfessionalProfile>(MaterialPageRoute(builder:(_)=>ProfessionalProfileScreen(initial:widget.professional)));if(updated!=null)widget.onProfessionalChanged(updated);}
   @override Widget build(BuildContext context){
     final modules=[('Goniometria','Amplitude de movimento',Icons.straighten,RecordType.goniometry),('Força muscular','Escalas e evolução',Icons.fitness_center,RecordType.strength),('Avaliação','Avaliação fisioterapêutica',Icons.assignment_outlined,RecordType.assessment),('Evoluções','Histórico de atendimentos',Icons.monitor_heart_outlined,RecordType.evolution),('Testes','Testes funcionais',Icons.timer_outlined,RecordType.functionalTest)];
     return Scaffold(
-      appBar:AppBar(toolbarHeight:72,title:Row(children:[Container(width:44,height:44,decoration:BoxDecoration(color:Theme.of(context).colorScheme.primary,borderRadius:BorderRadius.circular(14)),child:const Icon(Icons.add_rounded,color:Colors.white,size:32)),const SizedBox(width:10),const Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('+Fisio',style:TextStyle(fontWeight:FontWeight.w900,fontSize:22)),Text('Seu consultório no seu bolso',style:TextStyle(fontSize:11,fontWeight:FontWeight.normal))])]),actions:[IconButton(tooltip:'Segurança e backup',onPressed:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const SecurityBackupScreen())),icon:const Icon(Icons.shield_outlined)),IconButton(tooltip:pro.isPro?'PRO ativado':'+Fisio PRO',onPressed:_openPro,icon:Icon(pro.isPro?Icons.verified:Icons.workspace_premium_outlined,color:pro.isPro?Theme.of(context).colorScheme.primary:null))]),
+      appBar:AppBar(toolbarHeight:72,title:const Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text('+Fisio',style:TextStyle(fontWeight:FontWeight.w900,fontSize:22,color:Color(0xFF28A8E0))),Text('Seu consultório no seu bolso',style:TextStyle(fontSize:11,fontWeight:FontWeight.normal))]),actions:[IconButton(tooltip:'Meu perfil profissional',onPressed:_editProfessional,icon:const Icon(Icons.badge_outlined)),IconButton(tooltip:'Segurança e backup',onPressed:()=>Navigator.push(context,MaterialPageRoute(builder:(_)=>const SecurityBackupScreen())),icon:const Icon(Icons.shield_outlined)),IconButton(tooltip:pro.isPro?'PRO ativado':'+Fisio PRO',onPressed:_openPro,icon:Icon(pro.isPro?Icons.verified:Icons.workspace_premium_outlined,color:pro.isPro?Theme.of(context).colorScheme.primary:null))]),
       body:RefreshIndicator(onRefresh:_refresh,child:ListView(padding:const EdgeInsets.fromLTRB(18,8,18,30),children:[
+        Card(child:ListTile(onTap:_editProfessional,contentPadding:const EdgeInsets.symmetric(horizontal:18,vertical:10),leading:CircleAvatar(backgroundColor:Theme.of(context).colorScheme.primaryContainer,child:Icon(Icons.person_outline,color:Theme.of(context).colorScheme.primary)),title:Text('Olá, ${widget.professional.name}!',style:const TextStyle(fontWeight:FontWeight.w900)),subtitle:Text(widget.professional.registration),trailing:const Icon(Icons.edit_outlined))),
+        const SizedBox(height:12),
         Container(padding:const EdgeInsets.all(22),decoration:BoxDecoration(color:Theme.of(context).colorScheme.primary,borderRadius:BorderRadius.circular(24)),child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[const Icon(Icons.health_and_safety_outlined,color:Colors.white,size:34),const SizedBox(height:14),const Text('Seu consultório no seu bolso',style:TextStyle(color:Colors.white,fontSize:24,fontWeight:FontWeight.w800)),const SizedBox(height:6),const Text('Cadastre pacientes, registre dados clínicos e acompanhe cada evolução com segurança.',style:TextStyle(color:Colors.white70,height:1.35)),const SizedBox(height:18),Row(children:[Expanded(child:FilledButton.icon(style:FilledButton.styleFrom(backgroundColor:Colors.white,foregroundColor:Theme.of(context).colorScheme.primary),onPressed:()=>_openPatients(null,true),icon:const Icon(Icons.person_add_alt_1),label:const Text('+ Paciente'))),const SizedBox(width:10),Expanded(child:OutlinedButton.icon(style:OutlinedButton.styleFrom(foregroundColor:Colors.white,side:const BorderSide(color:Colors.white54)),onPressed:()=>_openPatients(),icon:const Icon(Icons.people_alt_outlined),label:Text('$_patients pacientes')))]),])),
         if(!pro.isPro)...[const SizedBox(height:12),Card(child:ListTile(onTap:_openPro,leading:Icon(Icons.workspace_premium,color:Theme.of(context).colorScheme.primary),title:const Text('Conheça o +Fisio PRO',style:TextStyle(fontWeight:FontWeight.w800)),subtitle:const Text('Pagamento único • sem assinatura'),trailing:const Icon(Icons.chevron_right)))],
         const SizedBox(height:22),Row(mainAxisAlignment:MainAxisAlignment.spaceBetween,children:[Text('Ferramentas clínicas',style:Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight:FontWeight.w800)),TextButton(onPressed:()=>_openPatients(),child:const Text('Pacientes'))]),const SizedBox(height:8),
