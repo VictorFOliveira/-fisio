@@ -1,0 +1,144 @@
+import 'package:flutter/material.dart';
+
+import '../services/pro_service.dart';
+
+class ProScreen extends StatefulWidget {
+  const ProScreen({super.key});
+
+  @override
+  State<ProScreen> createState() => _ProScreenState();
+}
+
+class _ProScreenState extends State<ProScreen> {
+  final pro = ProService.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    pro.addListener(_changed);
+    if (pro.loading) pro.initialize();
+  }
+
+  void _changed() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void dispose() {
+    pro.removeListener(_changed);
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final price = pro.product?.price ?? 'R\$ 12,99';
+    return Scaffold(
+      appBar: AppBar(title: const Text('+Fisio PRO')),
+      body: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primary,
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Column(
+              children: [
+                const Icon(Icons.workspace_premium_rounded,
+                    color: Colors.white, size: 54),
+                const SizedBox(height: 12),
+                const Text('+Fisio PRO',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900)),
+                const SizedBox(height: 6),
+                const Text('Mais produtividade. Sem assinatura.',
+                    style: TextStyle(color: Colors.white70)),
+                const SizedBox(height: 16),
+                Text(price,
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 32,
+                        fontWeight: FontWeight.w900)),
+                const Text('pagamento único',
+                    style: TextStyle(color: Colors.white70)),
+              ],
+            ),
+          ),
+          const SizedBox(height: 22),
+          if (pro.isPro)
+            Card(
+              child: ListTile(
+                leading: Icon(Icons.verified,
+                    color: Theme.of(context).colorScheme.primary),
+                title: const Text('PRO ativado',
+                    style: TextStyle(fontWeight: FontWeight.w800)),
+                subtitle: const Text(
+                    'Todos os recursos premium estão liberados neste aparelho.'),
+              ),
+            ),
+          const _Benefit(Icons.block, 'Sem anúncios',
+              'Use o +Fisio sem publicidade.'),
+          const _Benefit(Icons.picture_as_pdf_outlined, 'Relatórios completos',
+              'PDFs profissionais e recursos avançados de relatório.'),
+          const _Benefit(Icons.query_stats, 'Gráficos avançados',
+              'Mais ferramentas para acompanhar a evolução.'),
+          const _Benefit(Icons.table_view_outlined, 'Exportação CSV',
+              'Exporte o histórico clínico para análise e arquivamento.'),
+          const _Benefit(Icons.cloud_done_outlined, 'Backup Google Drive',
+              'Mantenha uma cópia protegida na sua própria conta Google.'),
+          const _Benefit(Icons.palette_outlined, 'Personalização',
+              'Recursos de apresentação e relatórios personalizados.'),
+          const SizedBox(height: 18),
+          if (!pro.isPro)
+            FilledButton.icon(
+              onPressed: pro.loading ? null : pro.buy,
+              icon: const Icon(Icons.workspace_premium),
+              label: Text('Desbloquear PRO • $price'),
+            ),
+          const SizedBox(height: 8),
+          if (!pro.isPro)
+            TextButton(
+              onPressed: pro.available ? pro.restore : null,
+              child: const Text('Restaurar compra'),
+            ),
+          if (pro.error != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                pro.error!,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ),
+          const SizedBox(height: 12),
+          const Text(
+            'Pacientes, avaliações, goniometria, força muscular, evoluções e testes funcionais continuam disponíveis gratuitamente.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Benefit extends StatelessWidget {
+  const _Benefit(this.icon, this.title, this.subtitle);
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) => Card(
+        margin: const EdgeInsets.only(bottom: 8),
+        child: ListTile(
+          leading: Icon(icon, color: Theme.of(context).colorScheme.primary),
+          title: Text(title,
+              style: const TextStyle(fontWeight: FontWeight.w700)),
+          subtitle: Text(subtitle),
+        ),
+      );
+}

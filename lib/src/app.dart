@@ -1,0 +1,201 @@
+import 'package:flutter/material.dart';
+
+import 'data/app_database.dart';
+import 'screens/home_screen.dart';
+import 'services/security_service.dart';
+
+class MaisFisioApp extends StatelessWidget {
+  const MaisFisioApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    const primary = Color(0xFF087F78);
+    const secondary = Color(0xFF3D6E91);
+    const background = Color(0xFFF4F8F7);
+    final scheme = ColorScheme.fromSeed(
+      seedColor: primary,
+      brightness: Brightness.light,
+    ).copyWith(primary: primary, secondary: secondary, surface: Colors.white);
+
+    return MaterialApp(
+      title: '+Fisio',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        useMaterial3: true,
+        colorScheme: scheme,
+        scaffoldBackgroundColor: background,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: background,
+          surfaceTintColor: Colors.transparent,
+          centerTitle: false,
+        ),
+        cardTheme: CardThemeData(
+          elevation: 0,
+          margin: EdgeInsets.zero,
+          color: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: Color(0xFFE1EAE8)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: primary, width: 1.5),
+          ),
+        ),
+        filledButtonTheme: FilledButtonThemeData(
+          style: FilledButton.styleFrom(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+          ),
+        ),
+        chipTheme: ChipThemeData(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          side: BorderSide.none,
+        ),
+      ),
+      home: HomeScreen(database: AppDatabase.instance),
+      builder: (context, child) =>
+          AppLockGate(child: child ?? const SizedBox.shrink()),
+    );
+  }
+}
+
+class AppLockGate extends StatefulWidget {
+  const AppLockGate({super.key, required this.child});
+  final Widget child;
+
+  @override
+  State<AppLockGate> createState() => _AppLockGateState();
+}
+
+class _AppLockGateState extends State<AppLockGate>
+    with WidgetsBindingObserver {
+  bool _checking = true;
+  bool _locked = false;
+  bool _authRunning = false;
+  DateTime? _backgroundedAt;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _checkLock();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  Future<void> _checkLock() async {
+    final enabled = await SecurityService.isLockEnabled();
+    if (!mounted) return;
+    setState(() {
+      _locked = enabled;
+      _checking = false;
+    });
+    if (enabled) await _unlock();
+  }
+
+  Future<void> _unlock() async {
+    if (_authRunning) return;
+    _authRunning = true;
+    final ok = await SecurityService.authenticate();
+    _authRunning = false;
+    if (mounted) setState(() => _locked = !ok);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      _backgroundedAt ??= DateTime.now();
+      return;
+    }
+    if (state == AppLifecycleState.resumed) {
+      final since = _backgroundedAt;
+      _backgroundedAt = null;
+      if (since != null &&
+          DateTime.now().difference(since) > const Duration(seconds: 10)) {
+        SecurityService.isLockEnabled().then((enabled) {
+          if (enabled && mounted) {
+            setState(() => _locked = true);
+            _unlock();
+          }
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_checking) {
+      return const Material(
+        color: Color(0xFFF4F8F7),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+    if (!_locked) return widget.child;
+    return Material(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      child: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 92,
+                  height: 92,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(28),
+                  ),
+                  child: Icon(
+                    Icons.health_and_safety_outlined,
+                    size: 48,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  '+Fisio protegido',
+                  style: Theme.of(context)
+                      .textTheme
+                      .headlineSmall
+                      ?.copyWith(fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Seus prontuários estão protegidos. Autentique-se para continuar.',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                FilledButton.icon(
+                  onPressed: _unlock,
+                  icon: const Icon(Icons.fingerprint),
+                  label: const Text('Desbloquear +Fisio'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
