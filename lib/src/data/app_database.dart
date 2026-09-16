@@ -1,40 +1,22 @@
+import 'dart:math';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:path/path.dart';
-import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_sqlcipher/sqflite.dart';
 import '../models/clinical_record.dart';
 import '../models/patient.dart';
 
 class AppDatabase {
-  AppDatabase._();
-  static final instance = AppDatabase._();
+  AppDatabase._(); static final instance=AppDatabase._();
+  static const _storage=FlutterSecureStorage(); static const _keyName='database_encryption_key_v1';
   Database? _database;
-  Future<Database> get database async => _database ??= await _open();
-
-  Future<Database> _open() async {
-    final root = await getDatabasesPath();
-    return openDatabase(join(root, 'mais_fisio.db'), version: 2,
-      onConfigure: (db) => db.execute('PRAGMA foreign_keys = ON'),
-      onCreate: (db, version) async {
-        await db.execute('CREATE TABLE patients(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT NOT NULL,birth_date TEXT,phone TEXT,email TEXT,notes TEXT,created_at TEXT NOT NULL)');
-        await db.execute('CREATE TABLE clinical_records(id INTEGER PRIMARY KEY AUTOINCREMENT,patient_id INTEGER NOT NULL,type TEXT NOT NULL,title TEXT NOT NULL,value TEXT NOT NULL,unit TEXT,notes TEXT,body_region TEXT,movement TEXT,side TEXT,pain_score INTEGER,protocol TEXT,recorded_at TEXT NOT NULL,FOREIGN KEY(patient_id) REFERENCES patients(id) ON DELETE CASCADE)');
-      },
-      onUpgrade: (db, oldVersion, newVersion) async {
-        if (oldVersion < 2) {
-          for (final sql in [
-            'ALTER TABLE clinical_records ADD COLUMN body_region TEXT',
-            'ALTER TABLE clinical_records ADD COLUMN movement TEXT',
-            'ALTER TABLE clinical_records ADD COLUMN side TEXT',
-            'ALTER TABLE clinical_records ADD COLUMN pain_score INTEGER',
-            'ALTER TABLE clinical_records ADD COLUMN protocol TEXT',
-          ]) { await db.execute(sql); }
-        }
-      },
-    );
-  }
-
-  Future<int> addPatient(Patient patient) async { final db=await database; final data=patient.toMap()..remove('id'); return db.insert('patients',data); }
-  Future<List<Patient>> patients() async { final db=await database; final rows=await db.query('patients',orderBy:'name COLLATE NOCASE'); return rows.map(Patient.fromMap).toList(); }
-  Future<int> addRecord(ClinicalRecord record) async { final db=await database; final data=record.toMap()..remove('id'); return db.insert('clinical_records',data); }
-  Future<List<ClinicalRecord>> recordsFor(int patientId) async { final db=await database; final rows=await db.query('clinical_records',where:'patient_id = ?',whereArgs:[patientId],orderBy:'recorded_at DESC'); return rows.map(ClinicalRecord.fromMap).toList(); }
-  Future<int> deleteRecord(int id) async { final db=await database; return db.delete('clinical_records',where:'id = ?',whereArgs:[id]); }
-  Future<int> patientCount() async { final db=await database; final result=await db.rawQuery('SELECT COUNT(*) AS total FROM patients'); return Sqflite.firstIntValue(result)??0; }
+  Future<Database> get database async=>_database??=await _open();
+  static Future<String> encryptionKey()async{var key=await _storage.read(key:_keyName);if(key!=null&&key.length>=32)return key;final random=Random.secure();key=List<int>.generate(48,(_)=>random.nextInt(256)).map((b)=>b.toRadixString(16).padLeft(2,'0')).join();await _storage.write(key:_keyName,value:key);return key;}
+  Future<Database> _open()async{final root=await getDatabasesPath();final key=await encryptionKey();return openDatabase(join(root,'mais_fisio_secure.db'),password:key,version:2,onConfigure:(db)=>db.execute('PRAGMA foreign_keys = ON'),onCreate:(db,version)async{await db.execute('CREATE TABLE patients(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT NOT NULL,birth_date TEXT,phone TEXT,email TEXT,notes TEXT,created_at TEXT NOT NULL)');await db.execute('CREATE TABLE clinical_records(id INTEGER PRIMARY KEY AUTOINCREMENT,patient_id INTEGER NOT NULL,type TEXT NOT NULL,title TEXT NOT NULL,value TEXT NOT NULL,unit TEXT,notes TEXT,body_region TEXT,movement TEXT,side TEXT,pain_score INTEGER,protocol TEXT,recorded_at TEXT NOT NULL,FOREIGN KEY(patient_id) REFERENCES patients(id) ON DELETE CASCADE)');},onUpgrade:(db,oldVersion,newVersion)async{if(oldVersion<2){for(final sql in ['ALTER TABLE clinical_records ADD COLUMN body_region TEXT','ALTER TABLE clinical_records ADD COLUMN movement TEXT','ALTER TABLE clinical_records ADD COLUMN side TEXT','ALTER TABLE clinical_records ADD COLUMN pain_score INTEGER','ALTER TABLE clinical_records ADD COLUMN protocol TEXT']){await db.execute(sql);}}});}
+  Future<void> close()async{final db=_database;if(db!=null){await db.close();_database=null;}}
+  Future<int> addPatient(Patient patient)async{final db=await database;final data=patient.toMap()..remove('id');return db.insert('patients',data);}
+  Future<List<Patient>> patients()async{final db=await database;final rows=await db.query('patients',orderBy:'name COLLATE NOCASE');return rows.map(Patient.fromMap).toList();}
+  Future<int> addRecord(ClinicalRecord record)async{final db=await database;final data=record.toMap()..remove('id');return db.insert('clinical_records',data);}
+  Future<List<ClinicalRecord>> recordsFor(int patientId)async{final db=await database;final rows=await db.query('clinical_records',where:'patient_id = ?',whereArgs:[patientId],orderBy:'recorded_at DESC');return rows.map(ClinicalRecord.fromMap).toList();}
+  Future<int> deleteRecord(int id)async{final db=await database;return db.delete('clinical_records',where:'id = ?',whereArgs:[id]);}
+  Future<int> patientCount()async{final db=await database;final result=await db.rawQuery('SELECT COUNT(*) AS total FROM patients');return Sqflite.firstIntValue(result)??0;}
 }
