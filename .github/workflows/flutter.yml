@@ -17,7 +17,10 @@ jobs:
           cache: true
       - name: Generate Android scaffold when needed
         run: |
-          if [ ! -d android ]; then flutter create --platforms=android --project-name=mais_fisio .; fi
+          if [ ! -d android ]; then
+            flutter create --platforms=android --project-name=mais_fisio .
+            rm -f test/widget_test.dart
+          fi
       - run: flutter pub get
       - run: flutter analyze
       - run: flutter test
